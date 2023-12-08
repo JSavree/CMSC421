@@ -62,6 +62,28 @@ class ValueIterationAgent(ValueEstimationAgent):
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        # I run value iteration for self.iterations number of times
+        for iter in range(self.iterations):
+
+            prev_values = self.values.copy() # store all the previous values somewhere
+
+            # I need to update all the states during value iterations
+            for state in self.mdp.getStates():
+                if not self.mdp.isTerminal(state):
+                    largest_value = []
+                    for action in self.mdp.getPossibleActions(state):
+                        value_kp1 = 0
+                        for transition in self.mdp.getTransitionStatesAndProbs(state, action):
+                            # This contains a next state of the action from current state
+                            next_state = transition[0]
+                            # This contains probability to end up on that next state if taking the action
+                            probability = transition[1]
+                            value_kp1 = value_kp1 + probability*(self.mdp.getReward(state, action, next_state) +
+                                                                 (self.discount*prev_values[next_state]))
+                        largest_value.append(value_kp1)
+                    max_value = max(largest_value) # the max value over the possible actions for the current state
+                    self.values[state] = max_value # update the current state
+
 
 
     def getValue(self, state):
@@ -77,7 +99,16 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        next_state_prob_pairs = self.mdp.getTransitionStatesAndProbs(state, action)
+        q_value = 0
+
+        for transition in next_state_prob_pairs:
+            next_state = transition[0] # This contains a next state of the action from current state
+            probability = transition[1] # This contains probability to end up on that next state if taking the action
+            q_value = q_value + probability*(self.mdp.getReward(state, action, next_state) +
+                                             (self.discount*self.values[next_state]))
+
+        return q_value
 
     def computeActionFromValues(self, state):
         """
@@ -89,9 +120,36 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # since getPolicy is simply self.computeActionFromValues(state)
+        # this should return the policy
+
+        # Terminal state has no legal actions, so return None.
+        if self.mdp.isTerminal(state):
+            return None
+
+        action_dict = util.Counter()
+        # The value function only accepts a state as input, but Q-value function accepts state, action pairs
+        # And since my computeQValueFromValues computes the Q-value using the values currently stored in self.values
+        # I will need to use my Q-values to determine the best action
+        for action in self.mdp.getPossibleActions(state):
+            q_val = self.computeQValueFromValues(state, action)
+            action_dict[action] = q_val
+
+        best_action = action_dict.argMax()
+
+        return best_action
 
     def getPolicy(self, state):
+        """
+            What is the best action to take in the state. Note that because
+            we might want to explore, this might not coincide with getAction
+            Concretely, this is given by
+
+            policy(s) = arg_max_{a in actions} Q(s,a)
+
+            If many actions achieve the maximal Q-value,
+            it doesn't matter which is selected.
+        """
         return self.computeActionFromValues(state)
 
     def getAction(self, state):

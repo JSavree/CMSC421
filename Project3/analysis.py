@@ -20,8 +20,12 @@
 # value iteration.
 
 def question2():
+    # I reason that because we want the agent to cross the bridge, we should set a low discount, as we would prefer
+    # more reward later rather than sooner in this case. This proved to not be the case.
+    # So, the next thing I tried was to change the noise. I reason that we want a lower noise because we want the agent
+    # to cross the bridge, but we really don't want the agent to jump into the chasm, so a lower noise should allow that
     answerDiscount = 0.9
-    answerNoise = 0.2
+    answerNoise = 0.01
     return answerDiscount, answerNoise
 
 def question3a():
